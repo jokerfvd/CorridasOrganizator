@@ -1,0 +1,13 @@
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\bin\Debug\WindowsFormsApplication1.exe
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\bin\Debug\WindowsFormsApplication1.pdb
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\bin\Debug\HtmlAgilityPack.dll
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\bin\Debug\HtmlAgilityPack.pdb
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\bin\Debug\HtmlAgilityPack.xml
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.csprojResolveAssemblyReference.cache
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.Form1.resources
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.Properties.Resources.resources
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.csproj.GenerateResource.Cache
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.exe
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.pdb
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\obj\Debug\Interop.SHDocVw.dll
+C:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.csproj.ResolveComReference.cache
