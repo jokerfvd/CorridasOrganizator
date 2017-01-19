@@ -81,7 +81,7 @@ namespace WindowsFormsApplication1
                             continue;
                         }
                         HtmlNodeCollection spans = aux.SelectNodes("span");
-                        String nome = spans[0].InnerText.Trim();
+                        String nome = spans[0].InnerText.Trim().Replace(" ", "");
                         String preco = "";
                         if (li.Descendants("p").ToList().Count > 0)
                         {
@@ -112,7 +112,7 @@ namespace WindowsFormsApplication1
                                     precoAte = precoAte.Replace("Até ", "");
                                 }
                             }
-                            descricao.modalidades.Add(new Modalidade(mod, preco2, precoAte));
+                            descricao.modalidades.Add(new Modalidade(mod.Trim(), preco2, precoAte));
                         }
                         corridas[id].descricoes.Add(descricao);
                     }
@@ -267,7 +267,7 @@ namespace WindowsFormsApplication1
             //desabilitando alertas de segurança
             ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(ValidateServerCertificate);
             siteAtivo();
-            siteYes();
+            //siteYes();
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -283,6 +283,12 @@ namespace WindowsFormsApplication1
             Microsoft.Office.Interop.Excel._Worksheet oSheet = oWB.ActiveSheet;
             oSheet.Name = "Corridas";
 
+            //criando sheet invisivel
+            Microsoft.Office.Interop.Excel.Worksheet invisible =  (Microsoft.Office.Interop.Excel.Worksheet)oXL.Worksheets.Add();
+            invisible.Name = "invisivel";
+            //////////////////////DEIXA INVISIVEL DEPOIS
+            //invisible.Visible = Microsoft.Office.Interop.Excel.XlSheetVisibility.xlSheetHidden;
+
             //cabecalho do arquivo
             int row = 1, col = 1;
             Microsoft.Office.Interop.Excel.Range cell, linha = (Microsoft.Office.Interop.Excel.Range)oSheet.Rows[row];
@@ -291,57 +297,74 @@ namespace WindowsFormsApplication1
                 linha.Columns[col++] = c;
             linha.Font.Bold = true;
             row++;
+            int namesCount = 1, starNameRow = 1;
             foreach (var entry in corridas.OrderBy(i => i.Value.getDate()))
             {
                 linha = (Microsoft.Office.Interop.Excel.Range)oSheet.Rows[row];
-                linha.Interior.Color = ColorTranslator.ToOle(Color.LightGray);
+                //linha.Interior.Color = ColorTranslator.ToOle(Color.LightGray);
                 Corrida corrida = entry.Value;
-                aux = String.Format("{0};{1};{2};{3};;;;;{4};{5}", corrida.getData(), corrida.getNome(), corrida.getCidade(), corrida.getLocal(), corrida.getEncerra(), corrida.getRetiradaKit());
-                col = 1;
-                foreach (String c in aux.Split(';'))
+                oSheet.Cells[row, 1] = corrida.getData();
+                //nome. irei colocar a URL como link
+                oSheet.Hyperlinks.Add(linha.Columns[2], corrida.getUrl(), Type.Missing, Type.Missing, corrida.getNome());
+                oSheet.Cells[row, 3] = corrida.getCidade();
+                oSheet.Cells[row, 4] = corrida.getLocal();
+                if (corrida.descricoes.Count > 0)//coluna TIPO
                 {
-                    if (col == 2 && corrida.getUrl() != "")//nome. irei colocar a URL como link
-                        oSheet.Hyperlinks.Add(linha.Columns[col++], corrida.getUrl(), Type.Missing, Type.Missing, c);
-                    else if (col == 5 && corrida.descricoes.Count > 0)//coluna TIPO
-                    {
-                        String tipos = "";
-                        foreach(Descricao descricao in corrida.descricoes)
-                            tipos = tipos + "," + descricao.getNome();
-                        tipos = tipos.Substring(1);
-                        linha.Columns[col].Validation.Add(Microsoft.Office.Interop.Excel.XlDVType.xlValidateList, Microsoft.Office.Interop.Excel.XlDVAlertStyle.xlValidAlertStop,
-                            Microsoft.Office.Interop.Excel.XlFormatConditionOperator.xlBetween,tipos);
-                        linha.Columns[col].Validation.InCellDropdown = true;
-                        oSheet.Cells[row, col] = tipos.Split(',')[0];
-                        linha.Columns[col++].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.FromArgb(255, 217, 217, 0));
-                    }
-                    else
-                        oSheet.Cells[row, col++] = c;
-                }
-                row++;
-                foreach(Descricao descricao in corrida.descricoes){
-                    aux = String.Format(";;;;{0};;{1}", descricao.getNome(), descricao.getPreco());
-                    col = 1;
-                    foreach (String c in aux.Split(';'))
-                    {
-                        cell = (Microsoft.Office.Interop.Excel.Range)oSheet.Cells[row, col];
-                        if (col == 6)//nome
-                            cell.Font.Bold = true;
-                        oSheet.Cells[row, col++] = c;
-                    }
-                    row++;
-                    foreach(Modalidade modalidade in descricao.modalidades){
-                        aux = String.Format(";;;;;{0};{1};{2}", modalidade.getNome(), modalidade.getPreco(), modalidade.getPrecoAte());
-                        col = 1;
-                        foreach (String c in aux.Split(';'))
-                        {
-                            cell = (Microsoft.Office.Interop.Excel.Range)oSheet.Cells[row, col];
-                            if (col == 7)//nome
-                                cell.Font.Bold = true;
-                            oSheet.Cells[row, col++] = c;
+                    String tipos = "";
+                    foreach(Descricao descricao in corrida.descricoes){
+                        tipos = tipos + "," + descricao.getNome();
+                        starNameRow = namesCount;
+                        for(int i=0; i < descricao.modalidades.Count; i++){
+                            Modalidade modalidade = descricao.modalidades.ElementAt(i);
+                            if (descricao.getPreco() != "")
+                                invisible.Cells[namesCount, 7] = descricao.getPreco(); 
+                            if (modalidade.getPreco() != "")
+                                invisible.Cells[namesCount, 7] = modalidade.getPreco();
+                            if (modalidade.getPrecoAte() != "")
+                                invisible.Cells[namesCount, 8] = modalidade.getPrecoAte();
+                            invisible.Cells[namesCount++, 1] = modalidade.getNome();                           
                         }
-                        row++;
+                           
+                        //os names ficam sempre na 1ª coluna do invisilve sheet. Em cada linha correspondente vai conter valores associados do subtipo
+                        String auxName = String.Format("#{0}.{1}.{2}", corrida.getCidade(), corrida.getData(), descricao.getNome()).Replace(" ","").Replace("/","").Replace(":","");
+                        Microsoft.Office.Interop.Excel.Name name = oSheet.Names.Add(auxName, invisible.get_Range((Microsoft.Office.Interop.Excel.Range)invisible.Cells[starNameRow, 1], (Microsoft.Office.Interop.Excel.Range)invisible.Cells[namesCount - 1, 1])); 
                     }
+                    tipos = tipos.Substring(1);
+                    //colocando listbox. COLUNA TIPO
+                    oSheet.Cells[row, 5].Validation.Add(Microsoft.Office.Interop.Excel.XlDVType.xlValidateList, Microsoft.Office.Interop.Excel.XlDVAlertStyle.xlValidAlertStop,
+                        Microsoft.Office.Interop.Excel.XlFormatConditionOperator.xlBetween,tipos, Type.Missing);
+                    oSheet.Cells[row, 5].Validation.InCellDropdown = true;
+                    oSheet.Cells[row, 5].Validation.IgnoreBlank = true;
+                    oSheet.Cells[row, 5] = corrida.descricoes[0].getNome();
+                    oSheet.Cells[row, 5].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightBlue);
+
+                    //colocando listbox. COLUNA SUBTIPO.
+                    oSheet.Cells[row, 6].Validation.Add(Microsoft.Office.Interop.Excel.XlDVType.xlValidateList, Type.Missing, Type.Missing, "=INDIRETO($E$" + row.ToString() + ")", Type.Missing); //coluna TIPO (col 5, E)
+                    oSheet.Cells[row, 6].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
+                    oSheet.Cells[row, 6] = corrida.descricoes[0].modalidades[0].getNome();
+
+                    
+                    try
+                    {
+                        //Na formula tem que ta em ingles! PQP! No validation nao.
+                        String auxName = String.Format("E{0}&\".")
+                            //PARAIE POR AQUIUUUUUUUUUUUUUUUUUUUUUUUuu
+                            //=C2&DIA(A2)&MÊS(A2)&HORA(A2)
+                        oSheet.Cells[row, 7].Formula = "=INDIRECT(\"invisivel!G\"&(ROW(INDIRECT(E" + row.ToString() + ")) + MATCH(F" + row.ToString() + ",INDIRECT(E" + row.ToString() + "),0)-1))";
+                        oSheet.Cells[row, 8].Formula = "=INDIRECT(\"invisivel!H\"&(ROW(INDIRECT(E" + row.ToString() + ")) + MATCH(F" + row.ToString() + ",INDIRECT(E" + row.ToString() + "),0)-1))";
+
+                        //oSheet.Cells[row, 8] = "=INDIRETO(\"invisivel!H\"&(LIN(INDIRETO(E" + row.ToString() + ")) + CORRESP(F" + row.ToString() + ",INDIRETO(E" + row.ToString() + "),0)-1))";   
+
+                    }
+                    catch (Exception ex) { System.Windows.Forms.MessageBox.Show(ex.Message); }
+                    //o INDIRECT SO FUNCIONOU EM PORTUGUES
+                    //=INDIRETO("invisivel!G"&LIN(INDIRETO(E2)))
+                    //INDIRETO("invisivel!G"&(LIN(INDIRETO($E$2)) + CORRESP(F2;INDIRETO(E2);0)-1))
                 }
+                oSheet.Cells[row, 9] = corrida.getEncerra();
+                oSheet.Cells[row, 10] = corrida.getRetiradaKit();            
+
+                row++;
             }
             oSheet.Columns[1].AutoFit();
             oSheet.Columns[2].AutoFit();
@@ -371,5 +394,7 @@ namespace WindowsFormsApplication1
             Marshal.FinalReleaseComObject(oWB);
             Marshal.FinalReleaseComObject(oXL);
         }
+
+
     }
 }

@@ -31,6 +31,11 @@ namespace WindowsFormsApplication1
             descricoes = new List<Descricao>();
         }
 
+        public int getId()
+        {
+            return id;
+        }
+
         public String getData()
         {
             return data.ToString("dd/MM/yyyy HH:mm");
