@@ -5,6 +5,7 @@ using System.Text;
 
 namespace WindowsFormsApplication1
 {
+    [Serializable]
     class Modalidade
     {
         private String nome;

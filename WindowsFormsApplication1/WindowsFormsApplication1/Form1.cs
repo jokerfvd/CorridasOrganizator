@@ -15,6 +15,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Web.Script.Serialization;
 
 namespace WindowsFormsApplication1
 {
@@ -22,6 +23,8 @@ namespace WindowsFormsApplication1
     {
         //private WebBrowser webBrowser;
         private Dictionary<int, Corrida> corridas = new Dictionary<int, Corrida>();
+        //bool jaFoiAtivo = false; //para evitar de executar varias vezes
+        //bool jaFoiYes = false;
 
         StreamWriter fileLog;
 
@@ -29,6 +32,7 @@ namespace WindowsFormsApplication1
         {
             InitializeComponent();
             fileLog = new StreamWriter("log.txt", false, Encoding.UTF8);
+            fileLog.WriteLine("Iniciando arquivo");
         }
 
         private String englishMonth(String data){
@@ -57,7 +61,7 @@ namespace WindowsFormsApplication1
         public void SiteAtivoCorrida_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
             WebBrowser webBrowser = (WebBrowser)sender;
-            if (webBrowser.ReadyState == WebBrowserReadyState.Complete)
+            if ((webBrowser.ReadyState == WebBrowserReadyState.Complete) && (webBrowser.Document.Url == e.Url))
             {
                 Application.DoEvents();
 
@@ -77,18 +81,39 @@ namespace WindowsFormsApplication1
                         catch (Exception)//
                         {
                             fileLog.WriteLine("possível combo");
-                            corridas[id].descricoes.Add(new Descricao("COMBO","?????"));
+                            Descricao descCombo = new Descricao("COMBO", "?????", "");
+                            descCombo.modalidades.Add(new Modalidade("VEJA NO SITE", "", ""));
+                            corridas[id].descricoes.Add(descCombo);
                             continue;
                         }
                         HtmlNodeCollection spans = aux.SelectNodes("span");
-                        String nome = spans[0].InnerText.Trim().Replace(" ", "");
+                        String nome = spans[0].InnerText.Trim();
                         String preco = "";
                         if (li.Descendants("p").ToList().Count > 0)
                         {
                             aux = li.Descendants("p").Where(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "b").First();
                             preco = aux.InnerText.Trim().Split(' ')[0];
                         }
-                        Descricao descricao = new Descricao(nome, preco);
+
+                        //pegando o preco do lote atual
+                        String precoDescAte = "";
+                        HtmlNodeCollection lotes = li.SelectNodes("div[1]/div[4]/span/a/span/ul");
+                        foreach (HtmlNode lote in lotes)
+                        {
+                            bool next = false;
+                            foreach (HtmlNode li2 in lote.SelectNodes("li"))
+                            {
+                                if (li2.InnerText == "Inscrição Comum") //o próxima vai ter o valor do primeiro lote
+                                    next = true;
+                                else if (next)
+                                {
+                                    precoDescAte = li2.InnerText.Trim();
+                                    preco = li2.SelectSingleNode("span").InnerText;
+                                }
+                            }
+                        }
+
+                        Descricao descricao = new Descricao(nome, preco, precoDescAte);
                         foreach (HtmlNode radio in li.Descendants("input").Where(d => d.Attributes.Contains("name") && d.Attributes["name"].Value == "modalidade"))
                         {
                             HtmlNode parent = radio.ParentNode;
@@ -118,7 +143,8 @@ namespace WindowsFormsApplication1
                     }
                     catch (Exception ex)
                     {
-                        fileLog.WriteLine(ex.Message);
+                        fileLog.WriteLine("Erro no SiteAtivoCorrida_DocumentCompleted :"+ex.Message);
+                        fileLog.WriteLine("StackTrace : "+ex.StackTrace);
                     }
                 }
                 progressBar1.PerformStep();
@@ -128,7 +154,8 @@ namespace WindowsFormsApplication1
         public void SiteAtivo_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
             WebBrowser webBrowser = (WebBrowser)sender;
-            if (webBrowser.ReadyState == WebBrowserReadyState.Complete){
+            //comparo "webBrowser.Document.Url == e.Url" pois as vezes vem 2x quando tem frame
+            if ((webBrowser.ReadyState == WebBrowserReadyState.Complete) && (webBrowser.Document.Url == e.Url)){
                 richTextBox1.Text = richTextBox1.Text + "INICIO site ativo\n";
                 HtmlElement element = webBrowser.Document.GetElementById("modalidade_select");
                 webBrowser.Document.Body.ScrollIntoView(false);
@@ -136,6 +163,7 @@ namespace WindowsFormsApplication1
                 var doc = new HtmlAgilityPack.HtmlDocument();
                 doc.LoadHtml(webBrowser.Document.GetElementsByTagName("html")[0].OuterHtml);
 
+                //selecionando somente corridas das cidades do filtro
                 String[] cidades = textBox1.Text.Split(';');
 
                 int total = 0;
@@ -173,34 +201,30 @@ namespace WindowsFormsApplication1
                             data = DateTime.Parse(data.ToString("dd/MM/yyyy ") + largada);
                             Corrida corrida = new Corrida(id, nome, cidade, data, url, local, retiradaKit, encerra);
                             corridas[id] = corrida;
-
                             total++;
                             //indo para o link da corrida
                             WebBrowser wb = new WebBrowser();
                             wb.ScriptErrorsSuppressed = true;
                             wb.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(SiteAtivoCorrida_DocumentCompleted);
                             wb.Navigate("https://checkout.ativo.com/evento/" + id.ToString());
-
-                            ///////////////////////////////////APAGAR
-                            if (total > 1)
-                                break;
                         }
                     }
                     catch (Exception ex)
                     {
-                        fileLog.WriteLine(ex.Message);
+                        fileLog.WriteLine("Erro no SiteAtivo_DocumentCompleted :"+ex.Message);
+                        fileLog.WriteLine("StackTrace : "+ex.StackTrace);
                     }
                 }
                 progressBar1.Maximum = total;
                 progressBar1.Step = 1;
-                richTextBox1.Text = richTextBox1.Text + "FIM site ativo\n";
+                richTextBox1.Text = richTextBox1.Text + "FIM site ativo - "+total.ToString()+" corridas.\n";
             }
         }
 
         public void SiteYes_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
             WebBrowser webBrowser = (WebBrowser)sender;
-            if (webBrowser.ReadyState == WebBrowserReadyState.Complete)
+            if ((webBrowser.ReadyState == WebBrowserReadyState.Complete) && (webBrowser.Document.Url == e.Url))
             {
                 richTextBox1.Text = richTextBox1.Text + "INICIO site yes\n";
                 HtmlWindow frame = webBrowser.Document.Window.Frames[0];
@@ -211,28 +235,42 @@ namespace WindowsFormsApplication1
                 int num = 100;
                 progressBar2.Maximum = trs.Count;
                 progressBar2.Step = 1;
+
+                //selecionando somente corridas dos estados do filtro
+                String[] estados = textBox2.Text.Split(';');
+
                 foreach (HtmlNode tr in trs)
                 {
                     if (tr.Attributes.Contains("class") && tr.Attributes["class"].Value == "hover-link-calendar")
                     {
                         String nome = tr.SelectSingleNode("td[2]").InnerText;
-                        String cidade = tr.SelectSingleNode("td[3]").InnerText;
-                        if (cidade.Contains("RJ") && !nome.Contains("Kit"))
-                        {
-                            cidade = cidade.Replace("-RJ", "");
-                            DateTime data = DateTime.Parse(tr.SelectSingleNode("td[1]").InnerText);
-                            String url = tr.Attributes["onclick"].Value;
-                            url = url.Replace("window.open('", "");
-                            url = url.Replace("','','')", "");
-                            if (!url.Contains("http"))
-                                url = "";      
-                            Corrida corrida = new Corrida(num, nome, cidade, data, url, "", "", data);
-                            corridas[num++] = corrida;
+                        if (!nome.Contains("Kit")){
+                            String aux = tr.SelectSingleNode("td[3]").InnerText;
+                            String estado = "";
+                            for (int i = 0; i < estados.Length;i++)
+                            {
+                                if (aux.Contains(estados[i])){
+                                    estado = estados[i];
+                                    break;
+                                }
+                            }
+                            if (estado != "")//se for verdade eh pq encontrou em algum da lista de estados
+                            {
+                                String cidade = aux.Replace("-"+estado, "");
+                                DateTime data = DateTime.Parse(tr.SelectSingleNode("td[1]").InnerText);
+                                String url = tr.Attributes["onclick"].Value;
+                                url = url.Replace("window.open('", "");
+                                url = url.Replace("','','')", "");
+                                if (!url.Contains("http"))
+                                    url = "";      
+                                Corrida corrida = new Corrida(num, nome, cidade, data, url, "", "", data);
+                                corridas[num++] = corrida;
+                            }
                         }
                     }
                     progressBar2.PerformStep();
                 }
-                richTextBox1.Text = richTextBox1.Text + "FIM site yes\n";
+                richTextBox1.Text = richTextBox1.Text + "FIM site yes ativo - " + (num-100).ToString() + " corridas.\n";
             }
         }
 
@@ -264,19 +302,22 @@ namespace WindowsFormsApplication1
 
         private void button1_Click(object sender, EventArgs e)
         {
+            button1.Enabled = false;
             //desabilitando alertas de segurança
             ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(ValidateServerCertificate);
             siteAtivo();
-            //siteYes();
+            siteYes();
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        private void gerarXLS()
         {
+            fileLog.WriteLine("GRAVANDO ARQUIVO .xls");
             richTextBox1.Text = richTextBox1.Text + "GRAVANDO ARQUIVO .xls\n";
             Microsoft.Office.Interop.Excel.Application oXL = new Microsoft.Office.Interop.Excel.Application();
             Microsoft.Office.Interop.Excel._Workbook oWB;
             oXL.DisplayAlerts = false;
-            FileInfo fi = new FileInfo(@"corridas.xls");
+            DateTime hoje = DateTime.Now;
+            FileInfo fi = new FileInfo(String.Format("corridas-{0}-gerado-em-{1}-{2}.xls",hoje.Year,hoje.Day,hoje.Month));
             if (fi.Exists)
                 fi.Delete();
             oWB = oXL.Workbooks.Add(Missing.Value);
@@ -284,8 +325,9 @@ namespace WindowsFormsApplication1
             oSheet.Name = "Corridas";
 
             //criando sheet invisivel
-            Microsoft.Office.Interop.Excel.Worksheet invisible =  (Microsoft.Office.Interop.Excel.Worksheet)oXL.Worksheets.Add();
+            Microsoft.Office.Interop.Excel.Worksheet invisible = (Microsoft.Office.Interop.Excel.Worksheet)oXL.Worksheets.Add();
             invisible.Name = "invisivel";
+            invisible.Columns[8].EntireColumn.NumberFormatLocal = "dd/mm/aaaa hh:mm";
             //////////////////////DEIXA INVISIVEL DEPOIS
             //invisible.Visible = Microsoft.Office.Interop.Excel.XlSheetVisibility.xlSheetHidden;
 
@@ -296,6 +338,10 @@ namespace WindowsFormsApplication1
             foreach (String c in aux.Split(';'))
                 linha.Columns[col++] = c;
             linha.Font.Bold = true;
+            //setando colunas de datas
+            oSheet.Columns[1].EntireColumn.NumberFormatLocal = "dd/mm/aaaa hh:mm";
+            oSheet.Columns[8].EntireColumn.NumberFormatLocal = "dd/mm/aaaa hh:mm";
+            oSheet.Columns[9].EntireColumn.NumberFormatLocal = "dd/mm/aaaa hh:mm";
             row++;
             int namesCount = 1, starNameRow = 1;
             foreach (var entry in corridas.OrderBy(i => i.Value.getDate()))
@@ -303,67 +349,92 @@ namespace WindowsFormsApplication1
                 linha = (Microsoft.Office.Interop.Excel.Range)oSheet.Rows[row];
                 //linha.Interior.Color = ColorTranslator.ToOle(Color.LightGray);
                 Corrida corrida = entry.Value;
-                oSheet.Cells[row, 1] = corrida.getData();
-                //nome. irei colocar a URL como link
-                oSheet.Hyperlinks.Add(linha.Columns[2], corrida.getUrl(), Type.Missing, Type.Missing, corrida.getNome());
-                oSheet.Cells[row, 3] = corrida.getCidade();
-                oSheet.Cells[row, 4] = corrida.getLocal();
-                if (corrida.descricoes.Count > 0)//coluna TIPO
+                try
                 {
-                    String tipos = "";
-                    foreach(Descricao descricao in corrida.descricoes){
-                        tipos = tipos + "," + descricao.getNome();
-                        starNameRow = namesCount;
-                        for(int i=0; i < descricao.modalidades.Count; i++){
-                            Modalidade modalidade = descricao.modalidades.ElementAt(i);
-                            if (descricao.getPreco() != "")
-                                invisible.Cells[namesCount, 7] = descricao.getPreco(); 
-                            if (modalidade.getPreco() != "")
-                                invisible.Cells[namesCount, 7] = modalidade.getPreco();
-                            if (modalidade.getPrecoAte() != "")
-                                invisible.Cells[namesCount, 8] = modalidade.getPrecoAte();
-                            invisible.Cells[namesCount++, 1] = modalidade.getNome();                           
-                        }
-                           
-                        //os names ficam sempre na 1ª coluna do invisilve sheet. Em cada linha correspondente vai conter valores associados do subtipo
-                        String auxName = String.Format("#{0}.{1}.{2}", corrida.getCidade(), corrida.getData(), descricao.getNome()).Replace(" ","").Replace("/","").Replace(":","");
-                        Microsoft.Office.Interop.Excel.Name name = oSheet.Names.Add(auxName, invisible.get_Range((Microsoft.Office.Interop.Excel.Range)invisible.Cells[starNameRow, 1], (Microsoft.Office.Interop.Excel.Range)invisible.Cells[namesCount - 1, 1])); 
-                    }
-                    tipos = tipos.Substring(1);
-                    //colocando listbox. COLUNA TIPO
-                    oSheet.Cells[row, 5].Validation.Add(Microsoft.Office.Interop.Excel.XlDVType.xlValidateList, Microsoft.Office.Interop.Excel.XlDVAlertStyle.xlValidAlertStop,
-                        Microsoft.Office.Interop.Excel.XlFormatConditionOperator.xlBetween,tipos, Type.Missing);
-                    oSheet.Cells[row, 5].Validation.InCellDropdown = true;
-                    oSheet.Cells[row, 5].Validation.IgnoreBlank = true;
-                    oSheet.Cells[row, 5] = corrida.descricoes[0].getNome();
-                    oSheet.Cells[row, 5].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightBlue);
-
-                    //colocando listbox. COLUNA SUBTIPO.
-                    oSheet.Cells[row, 6].Validation.Add(Microsoft.Office.Interop.Excel.XlDVType.xlValidateList, Type.Missing, Type.Missing, "=INDIRETO($E$" + row.ToString() + ")", Type.Missing); //coluna TIPO (col 5, E)
-                    oSheet.Cells[row, 6].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
-                    oSheet.Cells[row, 6] = corrida.descricoes[0].modalidades[0].getNome();
-
-                    
-                    try
+                    oSheet.Cells[row, 1] = corrida.getDate();
+                    //nome. irei colocar a URL como link
+                    if (corrida.getUrl() != "")
+                        oSheet.Hyperlinks.Add(linha.Columns[2], corrida.getUrl(), Type.Missing, Type.Missing, corrida.getNome());
+                    else
+                        oSheet.Cells[row, 2] = corrida.getNome();
+                    oSheet.Cells[row, 3] = corrida.getCidade();
+                    oSheet.Cells[row, 4] = corrida.getLocal();
+                    if (corrida.descricoes.Count > 0)//coluna TIPO
                     {
-                        //Na formula tem que ta em ingles! PQP! No validation nao.
-                        String auxName = String.Format("E{0}&\".")
-                            //PARAIE POR AQUIUUUUUUUUUUUUUUUUUUUUUUUuu
+                        String tipos = "", aux2 = "";
+                        foreach (Descricao descricao in corrida.descricoes)
+                        {
+                            tipos = tipos + "," + descricao.getNome();
+                            starNameRow = namesCount;
+                            for (int i = 0; i < descricao.modalidades.Count; i++)
+                            {
+                                Modalidade modalidade = descricao.modalidades.ElementAt(i);
+                                if (descricao.getPreco() != "")
+                                    invisible.Cells[namesCount, 7] = descricao.getPreco();
+                                if (modalidade.getPreco() != "")
+                                    invisible.Cells[namesCount, 7] = modalidade.getPreco();
+                                if (descricao.getPreco() != "")
+                                    invisible.Cells[namesCount, 8] = descricao.getPrecoAte();
+                                else if (modalidade.getPrecoAte() != "")
+                                    invisible.Cells[namesCount, 8] = modalidade.getPrecoAte();
+                                invisible.Cells[namesCount++, 1] = modalidade.getNome();
+                            }
+
+                            //os names ficam sempre na 1ª coluna do invisilve sheet. Em cada linha correspondente vai conter valores associados do subtipo                       
+                            aux2 = String.Format("{0}.{1}.{2}", corrida.getCidade(), corrida.getDate().ToString("dMH"), descricao.getNome()).Replace(" ", "").Replace("-", "");
+                            Microsoft.Office.Interop.Excel.Name name = oSheet.Names.Add(aux2, invisible.get_Range((Microsoft.Office.Interop.Excel.Range)invisible.Cells[starNameRow, 1], (Microsoft.Office.Interop.Excel.Range)invisible.Cells[namesCount - 1, 1]));
+                        }
+                        tipos = tipos.Substring(1);
+
+                        int auxCol = 5; //para caso de erro na cols 5,6,7,8 (que costumam dar mais erros)
+                        String auxEng ="", auxPt="";
+                        try
+                        {
+                            //colocando listbox. COLUNA TIPO. auxCol = 5
+                            oSheet.Cells[row, auxCol].Validation.Add(Microsoft.Office.Interop.Excel.XlDVType.xlValidateList, Microsoft.Office.Interop.Excel.XlDVAlertStyle.xlValidAlertStop,
+                                Microsoft.Office.Interop.Excel.XlFormatConditionOperator.xlBetween, tipos, Type.Missing);
+                            oSheet.Cells[row, auxCol].Validation.InCellDropdown = true;
+                            oSheet.Cells[row, auxCol].Validation.IgnoreBlank = true;
+                            oSheet.Cells[row, auxCol] = corrida.descricoes[0].getNome();
+                            oSheet.Cells[row, auxCol].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightBlue);
+
+                            //colocando listbox. COLUNA SUBTIPO.
+                            auxEng = String.Format("INDIRECT(SUBSTITUTE(SUBSTITUTE(C{0},\"-\",\"\"),\" \",\"\")&\".\"&DAY(A{1})&MONTH(A{2})&HOUR(A{3})&\".\"&SUBSTITUTE(SUBSTITUTE(E{4},\"-\",\"\"),\" \",\"\"))", row.ToString(), row.ToString(), row.ToString(), row.ToString(), row.ToString());
+                            auxPt = String.Format("INDIRETO(SUBSTITUIR(SUBSTITUIR(C{0};\"-\";\"\");\" \";\"\")&\".\"&DIA(A{1})&MÊS(A{2})&HORA(A{3})&\".\"&SUBSTITUIR(SUBSTITUIR(E{4};\"-\";\"\");\" \";\"\"))", row.ToString(), row.ToString(), row.ToString(), row.ToString(), row.ToString());
+
+                            auxCol++;//auxCol = 6
+                            oSheet.Cells[row, auxCol].Validation.Add(Microsoft.Office.Interop.Excel.XlDVType.xlValidateList, Type.Missing, Type.Missing, "=" + auxPt, Type.Missing);
+                            oSheet.Cells[row, auxCol].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
+                            oSheet.Cells[row, auxCol] = corrida.descricoes[0].modalidades[0].getNome();
+
+                            //Na formula tem que ta em ingles! PQP! No validation em portugues.
                             //=C2&DIA(A2)&MÊS(A2)&HORA(A2)
-                        oSheet.Cells[row, 7].Formula = "=INDIRECT(\"invisivel!G\"&(ROW(INDIRECT(E" + row.ToString() + ")) + MATCH(F" + row.ToString() + ",INDIRECT(E" + row.ToString() + "),0)-1))";
-                        oSheet.Cells[row, 8].Formula = "=INDIRECT(\"invisivel!H\"&(ROW(INDIRECT(E" + row.ToString() + ")) + MATCH(F" + row.ToString() + ",INDIRECT(E" + row.ToString() + "),0)-1))";
-
-                        //oSheet.Cells[row, 8] = "=INDIRETO(\"invisivel!H\"&(LIN(INDIRETO(E" + row.ToString() + ")) + CORRESP(F" + row.ToString() + ",INDIRETO(E" + row.ToString() + "),0)-1))";   
-
+                            auxCol++;//auxCol = 7
+                            oSheet.Cells[row, auxCol].FormulaLocal = "=INDIRETO(\"invisivel!G\"&(LIN(" + auxPt + ") + CORRESP(F" + row.ToString() + ";" + auxPt + ";0)-1))";
+                            //oSheet.Cells[row, auxCol].Formula = "=INDIRECT(\"invisivel!G\"&(ROW(" + auxEng + ") + MATCH(F" + row.ToString() + "," + auxEng + ",0)-1))";
+                            auxCol++;//auxCol = 8
+                            oSheet.Cells[row, auxCol].Formula = "=INDIRECT(\"invisivel!H\"&(ROW(" + auxEng + ") + MATCH(F" + row.ToString() + "," + auxEng + ",0)-1))";
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Windows.Forms.MessageBox.Show(ex.Message);
+                            fileLog.WriteLine(String.Format("Erro nas formulas da corrida {0} - coluna {1} - linha {2}. {3}", corrida.getNome(), auxCol, row, ex.Message));
+                            fileLog.WriteLine("auxEng: " + auxEng);
+                            fileLog.WriteLine("auxPt: " + auxPt);
+                            fileLog.WriteLine("StackTrace : "+ex.StackTrace);
+                        }
+                        //o INDIRECT SO FUNCIONOU EM PORTUGUES
+                        //=INDIRETO("invisivel!G"&LIN(INDIRETO(E2)))
+                        //INDIRETO("invisivel!G"&(LIN(INDIRETO($E$2)) + CORRESP(F2;INDIRETO(E2);0)-1))
                     }
-                    catch (Exception ex) { System.Windows.Forms.MessageBox.Show(ex.Message); }
-                    //o INDIRECT SO FUNCIONOU EM PORTUGUES
-                    //=INDIRETO("invisivel!G"&LIN(INDIRETO(E2)))
-                    //INDIRETO("invisivel!G"&(LIN(INDIRETO($E$2)) + CORRESP(F2;INDIRETO(E2);0)-1))
+                    oSheet.Cells[row, 9] = corrida.getEncerraDate();
+                    oSheet.Cells[row, 10] = corrida.getRetiradaKit();
                 }
-                oSheet.Cells[row, 9] = corrida.getEncerra();
-                oSheet.Cells[row, 10] = corrida.getRetiradaKit();            
-
+                catch (Exception ex)
+                {
+                    fileLog.WriteLine(String.Format("Erro na escrita da corrida {0} - linha {1} : {2}", corrida.getNome(), row, ex.Message));
+                    fileLog.WriteLine("StackTrace : "+ex.StackTrace);
+                }
                 row++;
             }
             oSheet.Columns[1].AutoFit();
@@ -376,12 +447,12 @@ namespace WindowsFormsApplication1
             oSheet.Columns[9].AutoFit();
             oSheet.Cells.HorizontalAlignment = Microsoft.Office.Interop.Excel.XlHAlign.xlHAlignLeft;
 
-            fileLog.Close();
-
             oWB.SaveAs(fi.FullName, Microsoft.Office.Interop.Excel.XlFileFormat.xlWorkbookNormal, Missing.Value, Missing.Value, Missing.Value, Missing.Value,
                 Microsoft.Office.Interop.Excel.XlSaveAsAccessMode.xlExclusive);
             oWB.Close();
             oXL.Quit();
+            fileLog.WriteLine("FIM GRAVACAO DO ARQUIVO .xls");
+            richTextBox1.Text = richTextBox1.Text + "FIM GRAVACAO DO ARQUIVO .xls";
 
             //Clean up
             //NOTE: When in release mode, this does the trick
@@ -394,6 +465,79 @@ namespace WindowsFormsApplication1
             Marshal.FinalReleaseComObject(oWB);
             Marshal.FinalReleaseComObject(oXL);
         }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            fileLog.WriteLine("Fechando arquivo");
+            fileLog.Close();
+        }
+
+        private void SalvarEmJSON()
+        {
+            WriteToBinaryFile("corridas", corridas);
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            button2.Enabled = false;
+            SalvarEmJSON();
+            button2.Enabled = true;
+        }
+
+        private void CarregarDoJSON()
+        {
+            button3.Enabled = false;
+            corridas = ReadFromBinaryFile<Dictionary<int, Corrida>>("corridas");
+            button3.Enabled = true;
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            button1.Enabled = false;
+            CarregarDoJSON();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            button4.Enabled = false;
+            gerarXLS();
+            button4.Enabled = true;
+        }
+
+
+        /// <summary>
+        /// Writes the given object instance to a binary file.
+        /// <para>Object type (and all child types) must be decorated with the [Serializable] attribute.</para>
+        /// <para>To prevent a variable from being serialized, decorate it with the [NonSerialized] attribute; cannot be applied to properties.</para>
+        /// </summary>
+        /// <typeparam name="T">The type of object being written to the XML file.</typeparam>
+        /// <param name="filePath">The file path to write the object instance to.</param>
+        /// <param name="objectToWrite">The object instance to write to the XML file.</param>
+        /// <param name="append">If false the file will be overwritten if it already exists. If true the contents will be appended to the file.</param>
+        public static void WriteToBinaryFile<T>(string filePath, T objectToWrite, bool append = false)
+        {
+            using (Stream stream = File.Open(filePath, append ? FileMode.Append : FileMode.Create))
+            {
+                var binaryFormatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                binaryFormatter.Serialize(stream, objectToWrite);
+            }
+        }
+
+        /// <summary>
+        /// Reads an object instance from a binary file.
+        /// </summary>
+        /// <typeparam name="T">The type of object to read from the XML.</typeparam>
+        /// <param name="filePath">The file path to read the object instance from.</param>
+        /// <returns>Returns a new instance of the object read from the binary file.</returns>
+        public static T ReadFromBinaryFile<T>(string filePath)
+        {
+            using (Stream stream = File.Open(filePath, FileMode.Open))
+            {
+                var binaryFormatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                return (T)binaryFormatter.Deserialize(stream);
+            }
+        }
+
 
 
     }

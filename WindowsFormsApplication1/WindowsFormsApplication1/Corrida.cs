@@ -5,6 +5,7 @@ using System.Text;
 
 namespace WindowsFormsApplication1
 {
+    [Serializable]
     class Corrida
     {
         private int id;
@@ -74,6 +75,11 @@ namespace WindowsFormsApplication1
         public String getEncerra()
         {
             return encerra.ToString("dd/MM/yyyy");
+        }
+
+        public DateTime getEncerraDate()
+        {
+            return encerra;
         }
     }
 }

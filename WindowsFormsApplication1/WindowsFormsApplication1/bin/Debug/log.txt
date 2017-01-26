@@ -1,4 +1,0 @@
-﻿Impossível conectar-se ao servidor remoto
-A cadeia de caracteres não foi reconhecida como um DateTime válido. Há uma palavra desconhecida que começa no índice 13.
-SiteAtivoCorrida_DocumentCompleted --> 23584
-SiteAtivoCorrida_DocumentCompleted --> 32757
