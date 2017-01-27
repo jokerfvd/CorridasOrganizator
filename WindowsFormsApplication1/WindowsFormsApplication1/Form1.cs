@@ -16,6 +16,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Web.Script.Serialization;
+using System.Text.RegularExpressions;
 
 namespace WindowsFormsApplication1
 {
@@ -97,21 +98,44 @@ namespace WindowsFormsApplication1
 
                         //pegando o preco do lote atual
                         String precoDescAte = "";
-                        HtmlNodeCollection lotes = li.SelectNodes("div[1]/div[4]/span/a/span/ul");
-                        foreach (HtmlNode lote in lotes)
+                        IEnumerable<HtmlNode> lotes = li.Descendants("ul").Where(d => d.Attributes.Contains("class") && d.Attributes["class"].Value == "lotes");
+                        if (lotes != null)
                         {
-                            bool next = false;
-                            foreach (HtmlNode li2 in lote.SelectNodes("li"))
+                            foreach (HtmlNode lote in lotes)
                             {
-                                if (li2.InnerText == "Inscrição Comum") //o próxima vai ter o valor do primeiro lote
-                                    next = true;
-                                else if (next)
+                                bool next = false;
+                                foreach (HtmlNode li2 in lote.SelectNodes("li"))
                                 {
-                                    precoDescAte = li2.InnerText.Trim();
-                                    preco = li2.SelectSingleNode("span").InnerText;
+                                    if (li2.InnerText == "Inscrição Comum") //o próxima vai ter o valor do primeiro lote
+                                        next = true;
+                                    else if (next)
+                                    {
+                                        precoDescAte = li2.InnerText.Trim();
+                                        if (precoDescAte.Contains("Até"))
+                                        {
+                                            //removendo o Até e multiplos espaços
+                                            String[] aux2 = Regex.Replace(precoDescAte.Replace("Até ", ""), @"\s+", " ").Split(' ');
+                                            if ((aux2.Length == 1) || (aux2[1] == preco))
+                                                precoDescAte = aux2[0];
+                                            else
+                                                continue;//o valor do lote atual esta no proximo
+                                        }
+                                        else if (precoDescAte.Contains("Lote"))
+                                        {
+                                            String precoDoLote = li2.SelectSingleNode("span").InnerText;
+                                            if (precoDoLote == preco)//encontrado o lote atual
+                                                precoDescAte = "Fim do " + precoDescAte.Split(';')[1].Split(':')[0];
+                                            else
+                                                continue;
+                                        }
+                                        break;
+                                    }
                                 }
+                                if (next)
+                                    break;
                             }
                         }
+//*/
 
                         Descricao descricao = new Descricao(nome, preco, precoDescAte);
                         foreach (HtmlNode radio in li.Descendants("input").Where(d => d.Attributes.Contains("name") && d.Attributes["name"].Value == "modalidade"))
@@ -328,8 +352,7 @@ namespace WindowsFormsApplication1
             Microsoft.Office.Interop.Excel.Worksheet invisible = (Microsoft.Office.Interop.Excel.Worksheet)oXL.Worksheets.Add();
             invisible.Name = "invisivel";
             invisible.Columns[8].EntireColumn.NumberFormatLocal = "dd/mm/aaaa hh:mm";
-            //////////////////////DEIXA INVISIVEL DEPOIS
-            //invisible.Visible = Microsoft.Office.Interop.Excel.XlSheetVisibility.xlSheetHidden;
+            invisible.Visible = Microsoft.Office.Interop.Excel.XlSheetVisibility.xlSheetHidden;
 
             //cabecalho do arquivo
             int row = 1, col = 1;
@@ -347,7 +370,6 @@ namespace WindowsFormsApplication1
             foreach (var entry in corridas.OrderBy(i => i.Value.getDate()))
             {
                 linha = (Microsoft.Office.Interop.Excel.Range)oSheet.Rows[row];
-                //linha.Interior.Color = ColorTranslator.ToOle(Color.LightGray);
                 Corrida corrida = entry.Value;
                 try
                 {
@@ -373,15 +395,17 @@ namespace WindowsFormsApplication1
                                     invisible.Cells[namesCount, 7] = descricao.getPreco();
                                 if (modalidade.getPreco() != "")
                                     invisible.Cells[namesCount, 7] = modalidade.getPreco();
-                                if (descricao.getPreco() != "")
+
+                                if (descricao.getPrecoAte() != "")
                                     invisible.Cells[namesCount, 8] = descricao.getPrecoAte();
                                 else if (modalidade.getPrecoAte() != "")
                                     invisible.Cells[namesCount, 8] = modalidade.getPrecoAte();
+                                else
+                                    invisible.Cells[namesCount, 8] = "?????";
                                 invisible.Cells[namesCount++, 1] = modalidade.getNome();
                             }
-
                             //os names ficam sempre na 1ª coluna do invisilve sheet. Em cada linha correspondente vai conter valores associados do subtipo                       
-                            aux2 = String.Format("{0}.{1}.{2}", corrida.getCidade(), corrida.getDate().ToString("dMH"), descricao.getNome()).Replace(" ", "").Replace("-", "");
+                            aux2 = String.Format("_{0}.{1}", row, descricao.getNome()).Replace(" ", "").Replace("-", "");
                             Microsoft.Office.Interop.Excel.Name name = oSheet.Names.Add(aux2, invisible.get_Range((Microsoft.Office.Interop.Excel.Range)invisible.Cells[starNameRow, 1], (Microsoft.Office.Interop.Excel.Range)invisible.Cells[namesCount - 1, 1]));
                         }
                         tipos = tipos.Substring(1);
@@ -399,33 +423,25 @@ namespace WindowsFormsApplication1
                             oSheet.Cells[row, auxCol].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightBlue);
 
                             //colocando listbox. COLUNA SUBTIPO.
-                            auxEng = String.Format("INDIRECT(SUBSTITUTE(SUBSTITUTE(C{0},\"-\",\"\"),\" \",\"\")&\".\"&DAY(A{1})&MONTH(A{2})&HOUR(A{3})&\".\"&SUBSTITUTE(SUBSTITUTE(E{4},\"-\",\"\"),\" \",\"\"))", row.ToString(), row.ToString(), row.ToString(), row.ToString(), row.ToString());
-                            auxPt = String.Format("INDIRETO(SUBSTITUIR(SUBSTITUIR(C{0};\"-\";\"\");\" \";\"\")&\".\"&DIA(A{1})&MÊS(A{2})&HORA(A{3})&\".\"&SUBSTITUIR(SUBSTITUIR(E{4};\"-\";\"\");\" \";\"\"))", row.ToString(), row.ToString(), row.ToString(), row.ToString(), row.ToString());
+                            auxPt  = String.Format("INDIRETO(\"_{0}.\"&SUBSTITUIR(SUBSTITUIR(E{1};\"-\";\"\");\" \";\"\"))", row.ToString(), row.ToString());
 
                             auxCol++;//auxCol = 6
                             oSheet.Cells[row, auxCol].Validation.Add(Microsoft.Office.Interop.Excel.XlDVType.xlValidateList, Type.Missing, Type.Missing, "=" + auxPt, Type.Missing);
                             oSheet.Cells[row, auxCol].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
                             oSheet.Cells[row, auxCol] = corrida.descricoes[0].modalidades[0].getNome();
 
-                            //Na formula tem que ta em ingles! PQP! No validation em portugues.
-                            //=C2&DIA(A2)&MÊS(A2)&HORA(A2)
                             auxCol++;//auxCol = 7
                             oSheet.Cells[row, auxCol].FormulaLocal = "=INDIRETO(\"invisivel!G\"&(LIN(" + auxPt + ") + CORRESP(F" + row.ToString() + ";" + auxPt + ";0)-1))";
-                            //oSheet.Cells[row, auxCol].Formula = "=INDIRECT(\"invisivel!G\"&(ROW(" + auxEng + ") + MATCH(F" + row.ToString() + "," + auxEng + ",0)-1))";
                             auxCol++;//auxCol = 8
-                            oSheet.Cells[row, auxCol].Formula = "=INDIRECT(\"invisivel!H\"&(ROW(" + auxEng + ") + MATCH(F" + row.ToString() + "," + auxEng + ",0)-1))";
+                            oSheet.Cells[row, auxCol].FormulaLocal = "=INDIRETO(\"invisivel!H\"&(LIN(" + auxPt + ") + CORRESP(F" + row.ToString() + ";" + auxPt + ";0)-1))";  
                         }
                         catch (Exception ex)
                         {
                             System.Windows.Forms.MessageBox.Show(ex.Message);
                             fileLog.WriteLine(String.Format("Erro nas formulas da corrida {0} - coluna {1} - linha {2}. {3}", corrida.getNome(), auxCol, row, ex.Message));
-                            fileLog.WriteLine("auxEng: " + auxEng);
                             fileLog.WriteLine("auxPt: " + auxPt);
                             fileLog.WriteLine("StackTrace : "+ex.StackTrace);
                         }
-                        //o INDIRECT SO FUNCIONOU EM PORTUGUES
-                        //=INDIRETO("invisivel!G"&LIN(INDIRETO(E2)))
-                        //INDIRETO("invisivel!G"&(LIN(INDIRETO($E$2)) + CORRESP(F2;INDIRETO(E2);0)-1))
                     }
                     oSheet.Cells[row, 9] = corrida.getEncerraDate();
                     oSheet.Cells[row, 10] = corrida.getRetiradaKit();
