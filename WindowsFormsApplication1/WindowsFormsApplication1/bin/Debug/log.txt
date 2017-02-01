@@ -1,0 +1,38 @@
+﻿Iniciando arquivo
+GRAVANDO ARQUIVO .xls
+Erro na escrita da corrida Nit Ultra Run - linha 10 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
+Nome do parâmetro: index
+StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
+   em System.Collections.Generic.List`1.get_Item(Int32 index)
+   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
+Erro na escrita da corrida Corrida Noturna Eu Atleta 10K e 5K - Etapa Rio - linha 32 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
+Nome do parâmetro: index
+StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
+   em System.Collections.Generic.List`1.get_Item(Int32 index)
+   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
+Erro na escrita da corrida Trail Running - linha 36 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
+Nome do parâmetro: index
+StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
+   em System.Collections.Generic.List`1.get_Item(Int32 index)
+   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
+Erro na escrita da corrida Move for Cancer - Rio de Janeiro - linha 38 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
+Nome do parâmetro: index
+StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
+   em System.Collections.Generic.List`1.get_Item(Int32 index)
+   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
+Erro na escrita da corrida 21ª Meia Maratona Internacional do Rio de Janeiro - linha 44 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
+Nome do parâmetro: index
+StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
+   em System.Collections.Generic.List`1.get_Item(Int32 index)
+   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
+Erro na escrita da corrida Entrega de kit - Corrida Mulher Maravilha - Rio - linha 45 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
+Nome do parâmetro: index
+StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
+   em System.Collections.Generic.List`1.get_Item(Int32 index)
+   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
+Erro na escrita da corrida Corrida Mulher Maravilha - Rio - linha 46 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
+Nome do parâmetro: index
+StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
+   em System.Collections.Generic.List`1.get_Item(Int32 index)
+   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
+Erro na escrita da corrida Corrida Noturna Halloween Run Brasil - Rio - linha 51 : O índ

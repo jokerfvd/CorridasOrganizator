@@ -17,15 +17,20 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Web.Script.Serialization;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace WindowsFormsApplication1
 {
     public partial class Form1 : Form
     {
         //private WebBrowser webBrowser;
-        private Dictionary<int, Corrida> corridas = new Dictionary<int, Corrida>();
-        //bool jaFoiAtivo = false; //para evitar de executar varias vezes
-        //bool jaFoiYes = false;
+        private Dictionary<String, Corrida> corridas = new Dictionary<String, Corrida>();
+        bool jaFoiMySports = false;
+        bool jaFoiCorridasBr = false;
+
+        bool fimAtivo = false;//para os que tem repetido esperar
+        bool fimYes = false;
+        bool fimMySports = false;
 
         StreamWriter fileLog;
 
@@ -64,13 +69,14 @@ namespace WindowsFormsApplication1
             WebBrowser webBrowser = (WebBrowser)sender;
             if ((webBrowser.ReadyState == WebBrowserReadyState.Complete) && (webBrowser.Document.Url == e.Url))
             {
-                Application.DoEvents();
+                //Application.DoEvents();
 
                 var doc = new HtmlAgilityPack.HtmlDocument();
-                int id = int.Parse(webBrowser.Url.ToString().Split('/').Last());
-                richTextBox1.Text = richTextBox1.Text + "PROCESSANDO " + corridas[id].getNome() + "\n";
+                //int id = int.Parse(webBrowser.Url.ToString().Split('/').Last());  
                 doc.LoadHtml(webBrowser.Document.GetElementsByTagName("html")[0].OuterHtml);
-                fileLog.WriteLine(String.Format("SiteAtivoCorrida_DocumentCompleted --> {0}", id));
+                String nomeCorrida = doc.DocumentNode.SelectSingleNode("/html/body/header/div[2]/div/div/text()").InnerText.Trim().Replace("Evento selecionado:","");
+                richTextBox1.Text = richTextBox1.Text + "Ativo - " + nomeCorrida + "\n";
+                fileLog.WriteLine(String.Format("SiteAtivoCorrida_DocumentCompleted --> {0}", nomeCorrida));
                 foreach (HtmlNode li in doc.DocumentNode.SelectNodes("/html/body/main/div/div/div[1]/ul/li")){
                     try
                     {
@@ -84,7 +90,7 @@ namespace WindowsFormsApplication1
                             fileLog.WriteLine("possível combo");
                             Descricao descCombo = new Descricao("COMBO", "?????", "");
                             descCombo.modalidades.Add(new Modalidade("VEJA NO SITE", "", ""));
-                            corridas[id].descricoes.Add(descCombo);
+                            corridas[nomeCorrida].descricoes.Add(descCombo);
                             continue;
                         }
                         HtmlNodeCollection spans = aux.SelectNodes("span");
@@ -135,7 +141,6 @@ namespace WindowsFormsApplication1
                                     break;
                             }
                         }
-//*/
 
                         Descricao descricao = new Descricao(nome, preco, precoDescAte);
                         foreach (HtmlNode radio in li.Descendants("input").Where(d => d.Attributes.Contains("name") && d.Attributes["name"].Value == "modalidade"))
@@ -163,7 +168,7 @@ namespace WindowsFormsApplication1
                             }
                             descricao.modalidades.Add(new Modalidade(mod.Trim(), preco2, precoAte));
                         }
-                        corridas[id].descricoes.Add(descricao);
+                        corridas[nomeCorrida].descricoes.Add(descricao);
                     }
                     catch (Exception ex)
                     {
@@ -172,6 +177,8 @@ namespace WindowsFormsApplication1
                     }
                 }
                 progressBar1.PerformStep();
+                if (progressBar1.Value == progressBar1.Maximum)
+                    fimAtivo = true;
             }
         }
 
@@ -181,7 +188,7 @@ namespace WindowsFormsApplication1
             //comparo "webBrowser.Document.Url == e.Url" pois as vezes vem 2x quando tem frame
             if ((webBrowser.ReadyState == WebBrowserReadyState.Complete) && (webBrowser.Document.Url == e.Url)){
                 richTextBox1.Text = richTextBox1.Text + "INICIO site ativo\n";
-                HtmlElement element = webBrowser.Document.GetElementById("modalidade_select");
+                //HtmlElement element = webBrowser.Document.GetElementById("modalidade_select");
                 webBrowser.Document.Body.ScrollIntoView(false);
 
                 var doc = new HtmlAgilityPack.HtmlDocument();
@@ -199,8 +206,8 @@ namespace WindowsFormsApplication1
                         String cidade = article.SelectSingleNode("div[1]/div[1]/header/a/div[4]/div/span").InnerText;
                         if (cidades.Contains(cidade))
                         {
-                            String nome = article.SelectSingleNode("div[1]/div[1]/header/a/div[2]/h2").InnerText;
-                            nome = nome.Replace(String.Format(" - {0}", cidade), "");
+                            String nomeCorrida = article.SelectSingleNode("div[1]/div[1]/header/a/div[2]/h2").InnerText.Trim();
+                            String nome = nomeCorrida.Replace(String.Format(" - {0}", cidade), "");
                             HtmlNodeCollection aux = article.SelectNodes("div[1]/div[1]/header/a/time/span");
                             DateTime data = DateTime.Parse(englishMonth(String.Format("{0}/{1}/{2}", aux[1].InnerText, aux[2].InnerText, aux[0].InnerText)));
                             String url = article.SelectSingleNode("div[1]/figure/a").Attributes["href"].Value;
@@ -223,8 +230,8 @@ namespace WindowsFormsApplication1
                             retiradaKit = Regex.Replace(retiradaKit, @"\t|\n|\r", "");
                             encerra = DateTime.Parse(doc2.DocumentNode.SelectSingleNode("//*[@id='main']/section/div/div/div[2]/div/div/div/p[1]").InnerText);
                             data = DateTime.Parse(data.ToString("dd/MM/yyyy ") + largada);
-                            Corrida corrida = new Corrida(id, nome, cidade, data, url, local, retiradaKit, encerra);
-                            corridas[id] = corrida;
+                            Corrida corrida = new Corrida(nome, cidade, data, url, local, retiradaKit, encerra);
+                            corridas[nomeCorrida] = corrida;
                             total++;
                             //indo para o link da corrida
                             WebBrowser wb = new WebBrowser();
@@ -256,7 +263,7 @@ namespace WindowsFormsApplication1
                 doc.LoadHtml(frame.Document.Body.OuterHtml);
 
                 HtmlNodeCollection trs = doc.DocumentNode.SelectNodes("/body/table/tbody/tr/td/table/tbody/tr[2]/td/table/tbody/tr");
-                int num = 100;
+                int num = 0;
                 progressBar2.Maximum = trs.Count;
                 progressBar2.Step = 1;
 
@@ -280,21 +287,215 @@ namespace WindowsFormsApplication1
                             }
                             if (estado != "")//se for verdade eh pq encontrou em algum da lista de estados
                             {
-                                String cidade = aux.Replace("-"+estado, "");
+                                String cidade = aux.Replace("-" + estado, "");
                                 DateTime data = DateTime.Parse(tr.SelectSingleNode("td[1]").InnerText);
                                 String url = tr.Attributes["onclick"].Value;
                                 url = url.Replace("window.open('", "");
                                 url = url.Replace("','','')", "");
                                 if (!url.Contains("http"))
-                                    url = "";      
-                                Corrida corrida = new Corrida(num, nome, cidade, data, url, "", "", data);
-                                corridas[num++] = corrida;
+                                    url = "";
+                                Corrida corrida = new Corrida(nome, cidade, data, url, "", "", data);
+                                corridas[nome] = corrida;
+                                num++;
                             }
+                            else
+                                progressBar2.Maximum = progressBar2.Maximum - 1;//dominuindo o máximo
                         }
                     }
                     progressBar2.PerformStep();
                 }
-                richTextBox1.Text = richTextBox1.Text + "FIM site yes ativo - " + (num-100).ToString() + " corridas.\n";
+                richTextBox1.Text = richTextBox1.Text + "FIM site yes - " + num.ToString() + " corridas.\n";
+                fimYes = true;
+            }
+        }
+
+        public void SiteMySportsDescricao_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
+        {
+            WebBrowser webBrowser = (WebBrowser)sender;
+            if ((webBrowser.ReadyState == WebBrowserReadyState.Complete) && (webBrowser.Document.Url == e.Url))
+            {
+                var doc = new HtmlAgilityPack.HtmlDocument();
+                webBrowser.Document.Body.ScrollIntoView(false);
+                doc.LoadHtml(webBrowser.Document.GetElementsByTagName("html")[0].OuterHtml);
+                //Application.DoEvents();
+                String nomeCorrida = doc.DocumentNode.SelectSingleNode("//*[@id='divEventoDestaqueNome']/span[1]").InnerText.Trim();
+
+                String nomeDesc = doc.DocumentNode.SelectSingleNode("//*[@id='divEventoKitInfo']/span").InnerText.Trim();
+                String preco = doc.DocumentNode.Descendants("b").Last().NextSibling.InnerText.Trim();
+                Descricao descricao = new Descricao(nomeDesc, preco, "");
+                descricao.modalidades.Add(new Modalidade("----------", "", ""));
+                corridas[nomeCorrida].descricoes.Add(descricao);
+            }
+        }
+
+        public void SiteMySportsCorrida_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
+        {
+            WebBrowser webBrowser = (WebBrowser)sender;
+            if ((webBrowser.ReadyState == WebBrowserReadyState.Complete) && (webBrowser.Document.Url == e.Url))
+            {
+                var doc = new HtmlAgilityPack.HtmlDocument();
+                webBrowser.Document.Body.ScrollIntoView(false);
+                doc.LoadHtml(webBrowser.Document.GetElementsByTagName("html")[0].OuterHtml);
+                //Application.DoEvents();
+                String nomeCorrida = doc.DocumentNode.SelectSingleNode("//*[@id='divEventoDestaqueNome']/span[1]").InnerText.Trim();
+                richTextBox1.Text = richTextBox1.Text + "MySports - " + nomeCorrida + "\n";
+
+                HtmlNodeCollection kits = doc.DocumentNode.SelectNodes("//*[@id='navEvento']/ul/li[3]/ul/li");
+                if (kits != null)
+                {
+                    foreach (HtmlNode kit in kits)
+                    {
+                        String url2 = kit.SelectSingleNode("a").Attributes["href"].Value;
+                        WebBrowser wb = new WebBrowser();
+                        wb.ScriptErrorsSuppressed = true;
+                        wb.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(SiteMySportsDescricao_DocumentCompleted);
+                        wb.Navigate("https://www.mysports.com.br/" + url2);
+                    }
+                }
+                else //unico
+                {
+                    String url2 = doc.DocumentNode.SelectSingleNode("//*[@id='navEvento']/ul/li[3]/a").Attributes["href"].Value;
+                    WebBrowser wb = new WebBrowser();
+                    wb.ScriptErrorsSuppressed = true;
+                    wb.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(SiteMySportsDescricao_DocumentCompleted);
+                    wb.Navigate("https://www.mysports.com.br/" + url2);
+                }
+                progressBar3.PerformStep();
+            }
+        }
+
+        public void SiteMySports_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
+        {
+            WebBrowser webBrowser = (WebBrowser)sender;
+            if ((webBrowser.ReadyState == WebBrowserReadyState.Complete) && (webBrowser.Document.Url == e.Url))
+            {
+                if (!jaFoiMySports)
+                {
+                    webBrowser.Document.GetElementById("formBase").InvokeMember("submit");
+                    jaFoiMySports = true;
+                    return;
+                }
+
+                richTextBox1.Text = richTextBox1.Text + "INICIO site mysports\n";
+                var doc = new HtmlAgilityPack.HtmlDocument();
+                webBrowser.Document.Body.ScrollIntoView(false);
+                doc.LoadHtml(webBrowser.Document.GetElementsByTagName("html")[0].OuterHtml);
+
+                //selecionando somente corridas dos estados do filtro
+                String[] estados = textBox3.Text.Split(';');
+                HtmlNodeCollection eventos = doc.DocumentNode.SelectNodes("//*[@id='slide01']");
+                int num = 0;
+                progressBar3.Maximum = eventos.Count;
+                progressBar3.Step = 1;
+                foreach (HtmlNode evento in eventos) 
+                {
+                    String nome = evento.SelectSingleNode("div[2]/span[2]").InnerText;
+                    String estado = "";
+                    String[] aux = evento.SelectSingleNode("div[2]/span[3]").InnerText.Split('-');
+                    for (int i = 0; i < estados.Length;i++)
+                    {
+                        if (( (aux.Length == 2) && (aux[1].Trim().Contains(estados[i])) || nome.Contains(estados[i]))){
+                            estado = estados[i];
+                            break;
+                        }
+                    }
+                    if (estado != "")//se for verdade eh pq encontrou em algum da lista de estados
+                    {
+                        String cidade = aux[0].Trim();
+                        aux = evento.SelectSingleNode("div[2]/span[1]").InnerText.Split('.');
+                        DateTime data = DateTime.Parse(String.Format("{0} de {1} de {2}", aux[0], aux[1], aux[2]));
+                        String url = "https://www.mysports.com.br/" + evento.SelectSingleNode("div[1]/a").Attributes["href"].Value;
+                        Corrida corrida = new Corrida(nome, cidade, data, url, "", "", data);
+                        corridas[nome] = corrida;
+                        num++;
+
+                        //indo para o link da corrida
+                        WebBrowser wb = new WebBrowser();
+                        wb.ScriptErrorsSuppressed = true;
+                        wb.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(SiteMySportsCorrida_DocumentCompleted);
+                        wb.Navigate(url);
+                    }
+                    else
+                        progressBar3.Maximum = progressBar3.Maximum - 1;//diminuindo o máximo
+                }
+                richTextBox1.Text = richTextBox1.Text + "FIM site mysports - " + num.ToString() + " corridas.\n";
+                fimMySports = true;
+            }
+        }
+
+        public void SiteNit2Sports_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
+        {
+            WebBrowser webBrowser = (WebBrowser)sender;
+            if ((webBrowser.ReadyState == WebBrowserReadyState.Complete) && (webBrowser.Document.Url == e.Url))
+            {
+                richTextBox1.Text = richTextBox1.Text + "INICIO site Nit2Sports\n";
+                var doc = new HtmlAgilityPack.HtmlDocument();
+                webBrowser.Document.Body.ScrollIntoView(false);
+                doc.LoadHtml(webBrowser.Document.GetElementsByTagName("html")[0].OuterHtml);
+                int num = 0;
+                HtmlNodeCollection eventos = doc.DocumentNode.SelectNodes("//*[@class='article-content']");
+                progressBar4.Maximum = eventos.Count;
+                progressBar4.Step = 1;
+                foreach (HtmlNode evento in eventos)
+                {
+                    String nome = evento.SelectSingleNode("div[1]/div[1]/h3/a").InnerText;
+                    String url = evento.SelectSingleNode("div[1]/div[1]/h3/a").Attributes["href"].Value;
+                    String local = evento.SelectSingleNode("div[1]/div[3]/span[2]/text()").InnerText;
+                    String hora = evento.SelectSingleNode("div[1]/div[3]/span[1]/span/text()").InnerText;
+                    String dia = evento.SelectSingleNode("div[1]/div[3]/div/text()").InnerText;
+                    String mes = evento.SelectSingleNode("div[1]/div[3]/div/span").InnerText;
+                    DateTime data = DateTime.Parse(String.Format("{0}/{1}/{2} {3}", dia, mes, DateTime.Now.Year, hora));
+                    Corrida corrida = new Corrida(nome, "Niterói", data, url, local, "", data);
+                    corridas[nome] = corrida;
+                    progressBar4.PerformStep();
+                    num++;
+                }
+                richTextBox1.Text = richTextBox1.Text + "FIM site Nit2Sports - " + num.ToString() + " corridas.\n";
+            }
+        }
+
+        public void SiteCorridasBr_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
+        {
+            WebBrowser webBrowser = (WebBrowser)sender;
+            if ((webBrowser.ReadyState == WebBrowserReadyState.Complete) && (webBrowser.Document.Url == e.Url))
+            {
+                richTextBox1.Text = richTextBox1.Text + "INICIO site corridasbr\n";
+                var doc = new HtmlAgilityPack.HtmlDocument();
+                webBrowser.Document.Body.ScrollIntoView(false);
+                doc.LoadHtml(webBrowser.Document.GetElementsByTagName("html")[0].OuterHtml);
+                int num = 0;
+                HtmlNodeCollection tipos3 = doc.DocumentNode.SelectNodes("//*[@class='tipo3']");
+                progressBar5.Maximum = tipos3.Count/4; // dividido por 4 pois cada 4 itens compoem a corrida
+                progressBar5.Step = 1;
+                String[] cidades = textBox4.Text.Split(';');
+
+                for (int i = 0; i < tipos3.Count; i=i+4 )
+                {
+                    String cidade = tipos3[i+1].InnerText;
+                    String nome = tipos3[i + 2].InnerText;
+                    bool jaTem = false;
+                    foreach(String key in corridas.Keys)
+                        if (key.Contains(nome)){
+                            jaTem = true;
+                            break;
+                        }
+                    if (cidades.Contains(cidade) && !jaTem)
+                    {
+                        String url = e.Url.ToString().Replace("calendario.asp", "") + tipos3[i + 2].SelectSingleNode("a").Attributes["href"].Value;
+                        DateTime data = DateTime.Parse(tipos3[i].InnerText);
+                        Corrida corrida = new Corrida(nome, cidade, data, url, "", "", data);
+                        String distancias = tipos3[i + 3].InnerText;
+                        Descricao descricao = new Descricao(distancias, "?????", "");
+                        descricao.modalidades.Add(new Modalidade("----------", "", ""));
+                        corrida.descricoes.Add(descricao);
+                        corridas[nome] = corrida;
+                        progressBar5.PerformStep();
+                        num++;
+                    }
+                    else
+                        progressBar5.Maximum = progressBar5.Maximum - 1;
+                }
+                richTextBox1.Text = richTextBox1.Text + "FIM site corridasbr - " + num.ToString() + " corridas.\n";
             }
         }
 
@@ -324,13 +525,52 @@ namespace WindowsFormsApplication1
             webBrowser.Navigate("http://www.yescom.com.br/site/calendario.html");
         }
 
+        private void siteMySports()
+        {
+            WebBrowser webBrowser = new WebBrowser();
+            webBrowser.ScriptErrorsSuppressed = true;
+            webBrowser.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(SiteMySports_DocumentCompleted);
+            webBrowser.Navigate("https://www.mysports.com.br/calendario");
+        }
+
+        private void siteNit2Sports()
+        {
+            WebBrowser webBrowser = new WebBrowser();
+            webBrowser.ScriptErrorsSuppressed = true;
+            webBrowser.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(SiteNit2Sports_DocumentCompleted);
+            webBrowser.Navigate("http://www.nit2sports.com.br/");
+        }
+
+        private void siteCorridasBr()
+        {
+            WebBrowser webBrowser = new WebBrowser();
+            webBrowser.ScriptErrorsSuppressed = true;
+            webBrowser.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(SiteCorridasBr_DocumentCompleted);
+            webBrowser.Navigate("http://www.corridasbr.com.br/rj/");
+        }
+        
         private void button1_Click(object sender, EventArgs e)
         {
             button1.Enabled = false;
             //desabilitando alertas de segurança
             ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(ValidateServerCertificate);
+//*  
             siteAtivo();
+            while (!fimAtivo) Application.DoEvents();
             siteYes();
+            while (!fimYes) Application.DoEvents();
+            siteMySports();
+            while (!fimMySports) Application.DoEvents();
+            siteNit2Sports();
+//*/
+            siteCorridasBr();
+
+            /*
+             * http://www.corridasbr.com.br/rj/calendario.asp
+             * http://runnerbrasil.com.br/ (não tem do RH, só MG e SP)
+             * http://www.eventosmais.com/
+             * 
+             */
         }
 
         private void gerarXLS()
@@ -381,32 +621,45 @@ namespace WindowsFormsApplication1
                         oSheet.Cells[row, 2] = corrida.getNome();
                     oSheet.Cells[row, 3] = corrida.getCidade();
                     oSheet.Cells[row, 4] = corrida.getLocal();
-                    if (corrida.descricoes.Count > 0)//coluna TIPO
+                    if (corrida.descricoes.Count > 1 || (corrida.descricoes.Count == 1 && corrida.descricoes[0].modalidades.Count > 1))
                     {
                         String tipos = "", aux2 = "";
                         foreach (Descricao descricao in corrida.descricoes)
                         {
                             tipos = tipos + "," + descricao.getNome();
-                            starNameRow = namesCount;
-                            for (int i = 0; i < descricao.modalidades.Count; i++)
+/*
+                            if (corrida.descricoes.Count == 1 && descricao.modalidades.Count == 1)
                             {
-                                Modalidade modalidade = descricao.modalidades.ElementAt(i);
                                 if (descricao.getPreco() != "")
-                                    invisible.Cells[namesCount, 7] = descricao.getPreco();
-                                if (modalidade.getPreco() != "")
-                                    invisible.Cells[namesCount, 7] = modalidade.getPreco();
-
+                                    oSheet.Cells[row, 7] = descricao.getPreco();
                                 if (descricao.getPrecoAte() != "")
-                                    invisible.Cells[namesCount, 8] = descricao.getPrecoAte();
-                                else if (modalidade.getPrecoAte() != "")
-                                    invisible.Cells[namesCount, 8] = modalidade.getPrecoAte();
-                                else
-                                    invisible.Cells[namesCount, 8] = "?????";
-                                invisible.Cells[namesCount++, 1] = modalidade.getNome();
+                                    oSheet.Cells[row, 8] = descricao.getPrecoAte();
+                                oSheet.Cells[row, 5] = descricao.getNome();
                             }
-                            //os names ficam sempre na 1ª coluna do invisilve sheet. Em cada linha correspondente vai conter valores associados do subtipo                       
-                            aux2 = String.Format("_{0}.{1}", row, descricao.getNome()).Replace(" ", "").Replace("-", "");
-                            Microsoft.Office.Interop.Excel.Name name = oSheet.Names.Add(aux2, invisible.get_Range((Microsoft.Office.Interop.Excel.Range)invisible.Cells[starNameRow, 1], (Microsoft.Office.Interop.Excel.Range)invisible.Cells[namesCount - 1, 1]));
+*/ 
+                            //else
+                            //{
+                                starNameRow = namesCount;
+                                for (int i = 0; i < descricao.modalidades.Count; i++)
+                                {
+                                    Modalidade modalidade = descricao.modalidades.ElementAt(i);
+                                    if (descricao.getPreco() != "")
+                                        invisible.Cells[namesCount, 7] = descricao.getPreco();
+                                    if (modalidade.getPreco() != "")
+                                        invisible.Cells[namesCount, 7] = modalidade.getPreco();
+
+                                    if (descricao.getPrecoAte() != "")
+                                        invisible.Cells[namesCount, 8] = descricao.getPrecoAte();
+                                    else if (modalidade.getPrecoAte() != "")
+                                        invisible.Cells[namesCount, 8] = modalidade.getPrecoAte();
+                                    else
+                                        invisible.Cells[namesCount, 8] = "?????";
+                                    invisible.Cells[namesCount++, 1] = modalidade.getNome();
+                                }
+                                //os names ficam sempre na 1ª coluna do invisilve sheet. Em cada linha correspondente vai conter valores associados do subtipo                       
+                                aux2 = String.Format("_{0}.{1}", row, descricao.getNome()).Replace(" ", "").Replace("-", "");
+                                Microsoft.Office.Interop.Excel.Name name = oSheet.Names.Add(aux2, invisible.get_Range((Microsoft.Office.Interop.Excel.Range)invisible.Cells[starNameRow, 1], (Microsoft.Office.Interop.Excel.Range)invisible.Cells[namesCount - 1, 1]));
+                            //}
                         }
                         tipos = tipos.Substring(1);
 
@@ -443,7 +696,18 @@ namespace WindowsFormsApplication1
                             fileLog.WriteLine("StackTrace : "+ex.StackTrace);
                         }
                     }
-                    oSheet.Cells[row, 9] = corrida.getEncerraDate();
+                    else
+                    {//so tem 1 descricao e modalidade
+                        oSheet.Cells[row, 5] = corrida.descricoes[0].getNome();
+                        if (corrida.descricoes[0].getPreco() != "")
+                            oSheet.Cells[row, 7] = corrida.descricoes[0].getPreco();
+                        if (corrida.descricoes[0].getPrecoAte() != "")
+                            oSheet.Cells[row, 8] = corrida.descricoes[0].getPrecoAte();
+                    }
+                    if (corrida.getDate() == corrida.getEncerraDate()) //coloquei igual pois nao encontrei
+                        oSheet.Cells[row, 9] = "?????";
+                    else
+                        oSheet.Cells[row, 9] = corrida.getEncerraDate();
                     oSheet.Cells[row, 10] = corrida.getRetiradaKit();
                 }
                 catch (Exception ex)
@@ -488,7 +752,7 @@ namespace WindowsFormsApplication1
             fileLog.Close();
         }
 
-        private void SalvarEmJSON()
+        private void SalvarEmArquivo()
         {
             WriteToBinaryFile("corridas", corridas);
         }
@@ -496,21 +760,21 @@ namespace WindowsFormsApplication1
         private void button2_Click(object sender, EventArgs e)
         {
             button2.Enabled = false;
-            SalvarEmJSON();
+            SalvarEmArquivo();
             button2.Enabled = true;
         }
 
-        private void CarregarDoJSON()
+        private void CarregarDoArquivo()
         {
             button3.Enabled = false;
-            corridas = ReadFromBinaryFile<Dictionary<int, Corrida>>("corridas");
+            corridas = ReadFromBinaryFile<Dictionary<String, Corrida>>("corridas");
             button3.Enabled = true;
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
             button1.Enabled = false;
-            CarregarDoJSON();
+            CarregarDoArquivo();
         }
 
         private void button4_Click(object sender, EventArgs e)

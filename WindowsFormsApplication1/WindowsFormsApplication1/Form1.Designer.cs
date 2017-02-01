@@ -44,19 +44,26 @@
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.progressBar4 = new System.Windows.Forms.ProgressBar();
+            this.label7 = new System.Windows.Forms.Label();
+            this.progressBar5 = new System.Windows.Forms.ProgressBar();
+            this.label9 = new System.Windows.Forms.Label();
+            this.textBox4 = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // richTextBox1
             // 
             this.richTextBox1.Location = new System.Drawing.Point(12, 12);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(795, 427);
+            this.richTextBox1.Size = new System.Drawing.Size(795, 344);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(561, 506);
+            this.textBox1.Location = new System.Drawing.Point(561, 422);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(236, 20);
             this.textBox1.TabIndex = 1;
@@ -65,7 +72,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(558, 490);
+            this.label1.Location = new System.Drawing.Point(558, 406);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(87, 13);
             this.label1.TabIndex = 2;
@@ -73,7 +80,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(12, 445);
+            this.button1.Location = new System.Drawing.Point(12, 361);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 3;
@@ -83,49 +90,49 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(29, 503);
+            this.progressBar1.Location = new System.Drawing.Point(29, 419);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(526, 23);
             this.progressBar1.TabIndex = 4;
             // 
             // progressBar2
             // 
-            this.progressBar2.Location = new System.Drawing.Point(29, 550);
+            this.progressBar2.Location = new System.Drawing.Point(29, 466);
             this.progressBar2.Name = "progressBar2";
             this.progressBar2.Size = new System.Drawing.Size(526, 23);
             this.progressBar2.TabIndex = 5;
             // 
             // progressBar3
             // 
-            this.progressBar3.Location = new System.Drawing.Point(29, 596);
+            this.progressBar3.Location = new System.Drawing.Point(29, 512);
             this.progressBar3.Name = "progressBar3";
             this.progressBar3.Size = new System.Drawing.Size(526, 23);
             this.progressBar3.TabIndex = 6;
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(320, 445);
+            this.button2.Location = new System.Drawing.Point(320, 361);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 7;
-            this.button2.Text = "to JSON";
+            this.button2.Text = "Salvar";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(401, 445);
+            this.button3.Location = new System.Drawing.Point(401, 361);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(75, 23);
             this.button3.TabIndex = 8;
-            this.button3.Text = "from JSON";
+            this.button3.Text = "Carregar";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(26, 487);
+            this.label2.Location = new System.Drawing.Point(26, 403);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(74, 13);
             this.label2.TabIndex = 9;
@@ -134,7 +141,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(26, 534);
+            this.label3.Location = new System.Drawing.Point(26, 450);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(99, 13);
             this.label3.TabIndex = 10;
@@ -143,15 +150,15 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(26, 580);
+            this.label4.Location = new System.Drawing.Point(26, 496);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(46, 13);
+            this.label4.Size = new System.Drawing.Size(104, 13);
             this.label4.TabIndex = 11;
-            this.label4.Text = "Site ???";
+            this.label4.Text = "Site mysports.com.br";
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(106, 445);
+            this.button4.Location = new System.Drawing.Point(106, 361);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(75, 23);
             this.button4.TabIndex = 12;
@@ -161,7 +168,7 @@
             // 
             // textBox2
             // 
-            this.textBox2.Location = new System.Drawing.Point(561, 553);
+            this.textBox2.Location = new System.Drawing.Point(561, 469);
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(236, 20);
             this.textBox2.TabIndex = 13;
@@ -169,25 +176,91 @@
             // 
             // textBox3
             // 
-            this.textBox3.Location = new System.Drawing.Point(561, 599);
+            this.textBox3.Location = new System.Drawing.Point(561, 515);
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(236, 20);
             this.textBox3.TabIndex = 14;
+            this.textBox3.Text = "RJ";
             // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(558, 537);
+            this.label5.Location = new System.Drawing.Point(558, 453);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(87, 13);
             this.label5.TabIndex = 15;
             this.label5.Text = "Filtro de estados:";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(558, 499);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(87, 13);
+            this.label6.TabIndex = 16;
+            this.label6.Text = "Filtro de estados:";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(26, 538);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(108, 13);
+            this.label8.TabIndex = 18;
+            this.label8.Text = "Site nit2sports.com.br";
+            // 
+            // progressBar4
+            // 
+            this.progressBar4.Location = new System.Drawing.Point(29, 554);
+            this.progressBar4.Name = "progressBar4";
+            this.progressBar4.Size = new System.Drawing.Size(526, 23);
+            this.progressBar4.TabIndex = 17;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(26, 579);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(109, 13);
+            this.label7.TabIndex = 22;
+            this.label7.Text = "Site corridasbr.com.br";
+            // 
+            // progressBar5
+            // 
+            this.progressBar5.Location = new System.Drawing.Point(29, 595);
+            this.progressBar5.Name = "progressBar5";
+            this.progressBar5.Size = new System.Drawing.Size(526, 23);
+            this.progressBar5.TabIndex = 21;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(558, 582);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(87, 13);
+            this.label9.TabIndex = 20;
+            this.label9.Text = "Filtro de cidades:";
+            // 
+            // textBox4
+            // 
+            this.textBox4.Location = new System.Drawing.Point(561, 598);
+            this.textBox4.Name = "textBox4";
+            this.textBox4.Size = new System.Drawing.Size(236, 20);
+            this.textBox4.TabIndex = 19;
+            this.textBox4.Text = "Rio de Janeiro;Niteroi;Petrópolis;São Gonçalo";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(819, 655);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.progressBar5);
+            this.Controls.Add(this.label9);
+            this.Controls.Add(this.textBox4);
+            this.Controls.Add(this.label8);
+            this.Controls.Add(this.progressBar4);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.textBox3);
             this.Controls.Add(this.textBox2);
@@ -205,7 +278,7 @@
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.richTextBox1);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Corridas Organizer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
@@ -231,6 +304,13 @@
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.TextBox textBox3;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.ProgressBar progressBar4;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.ProgressBar progressBar5;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox textBox4;
     }
 }
 

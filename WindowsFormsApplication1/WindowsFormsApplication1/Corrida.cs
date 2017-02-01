@@ -8,7 +8,6 @@ namespace WindowsFormsApplication1
     [Serializable]
     class Corrida
     {
-        private int id;
         private String nome;
         private String cidade;
         private DateTime data;
@@ -19,9 +18,8 @@ namespace WindowsFormsApplication1
 
         public List<Descricao> descricoes;
 
-        public Corrida(int id, String nome, String cidade, DateTime data, String url, String local, String retiradaKit, DateTime encerra)
+        public Corrida(String nome, String cidade, DateTime data, String url, String local, String retiradaKit, DateTime encerra)
         {
-            this.id = id;
             this.nome = nome;
             this.cidade = cidade;
             this.data = data;
@@ -30,11 +28,6 @@ namespace WindowsFormsApplication1
             this.retiradaKit = retiradaKit;
             this.encerra = encerra;
             descricoes = new List<Descricao>();
-        }
-
-        public int getId()
-        {
-            return id;
         }
 
         public String getData()
