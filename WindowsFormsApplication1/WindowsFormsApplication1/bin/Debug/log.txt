@@ -1,4 +1,38 @@
 ﻿Iniciando arquivo
+Erro no SiteAtivo_DocumentCompleted :A cadeia de caracteres não foi reconhecida como um DateTime válido. Há uma palavra desconhecida que começa no índice 13.
+StackTrace :    em System.DateTimeParse.Parse(String s, DateTimeFormatInfo dtfi, DateTimeStyles styles)
+   em System.DateTime.Parse(String s)
+   em WindowsFormsApplication1.Form1.SiteAtivo_DocumentCompleted(Object sender, WebBrowserDocumentCompletedEventArgs e) na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 232
+Erro no SiteAtivo_DocumentCompleted :Referência de objeto não definida para uma instância de um objeto.
+StackTrace :    em WindowsFormsApplication1.Form1.SiteAtivo_DocumentCompleted(Object sender, WebBrowserDocumentCompletedEventArgs e) na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 229
+DESCARTADO
+SiteAtivoCorrida_DocumentCompleted --> 11ª Corrida e Caminhada de 5km e 10km da Lagoa Rodrigo de Freitas
+SiteAtivoCorrida_DocumentCompleted --> Circuito do Sol 2017 - Rio de Janeiro
+SiteAtivoCorrida_DocumentCompleted --> Rio Trail Run - 2017
+SiteAtivoCorrida_DocumentCompleted --> Combo Circuito Ilha Carioca – Corra 4 pague 3
+SiteAtivoCorrida_DocumentCompleted --> Circuito Ilha Carioca - Etapa Praia da Guanabara
+SiteAtivoCorrida_DocumentCompleted --> Série Delta - Etapa Estados Unidos - Rio de Janeiro
+possível combo
+SiteAtivoCorrida_DocumentCompleted --> Bravus Race 2017 - Speed - Rio de Janeiro - 1ª Etapa
+SiteAtivoCorrida_DocumentCompleted --> 2ª Corrida e Caminhada Eu Amo o Rio
+SiteAtivoCorrida_DocumentCompleted --> Night Run 2017 - Etapa Submarine - Rio de Janeiro
+possível combo
+SiteAtivoCorrida_DocumentCompleted --> Série Delta - Etapa Turquia - Rio de Janeiro
+possível combo
+SiteAtivoCorrida_DocumentCompleted --> Bravus Race 2017 - Monster - Rio de Janeiro
+SiteAtivoCorrida_DocumentCompleted --> Circuito das Estações 2017 - Inverno - Rio de Janeiro
+possível combo
+SiteAtivoCorrida_DocumentCompleted --> ASICS Golden Run 2017 - Rio de Janeiro
+SiteAtivoCorrida_DocumentCompleted --> Circuito das Estações 2017 - Primavera - Rio de Janeiro
+possível combo
+SiteAtivoCorrida_DocumentCompleted --> Night Run 2017 - Etapa Diamond - Rio de Janeiro
+possível combo
+SiteAtivoCorrida_DocumentCompleted --> Série Delta - Etapa Canadá - Rio de Janeiro
+possível combo
+SiteAtivoCorrida_DocumentCompleted --> Circuito das Estações 2017 - Verão - Rio de Janeiro
+possível combo
+SiteAtivoCorrida_DocumentCompleted --> 18ª Corrida Rústica de 5km e Caminhada 2,5km de Alcântara
+SiteAtivoCorrida_DocumentCompleted --> 1ª Corrida e Caminhada do Zé Garoto
 GRAVANDO ARQUIVO .xls
 Erro na escrita da corrida Nit Ultra Run - linha 10 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
 Nome do parâmetro: index
@@ -12,27 +46,4 @@ StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(Exception
    em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
 Erro na escrita da corrida Trail Running - linha 36 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
 Nome do parâmetro: index
-StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
-   em System.Collections.Generic.List`1.get_Item(Int32 index)
-   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
-Erro na escrita da corrida Move for Cancer - Rio de Janeiro - linha 38 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
-Nome do parâmetro: index
-StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
-   em System.Collections.Generic.List`1.get_Item(Int32 index)
-   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
-Erro na escrita da corrida 21ª Meia Maratona Internacional do Rio de Janeiro - linha 44 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
-Nome do parâmetro: index
-StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
-   em System.Collections.Generic.List`1.get_Item(Int32 index)
-   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
-Erro na escrita da corrida Entrega de kit - Corrida Mulher Maravilha - Rio - linha 45 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
-Nome do parâmetro: index
-StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
-   em System.Collections.Generic.List`1.get_Item(Int32 index)
-   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
-Erro na escrita da corrida Corrida Mulher Maravilha - Rio - linha 46 : O índice estava fora do intervalo. Ele deve ser não-negativo e menor que o tamanho da coleção.
-Nome do parâmetro: index
-StackTrace :    em System.ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionResource resource)
-   em System.Collections.Generic.List`1.get_Item(Int32 index)
-   em WindowsFormsApplication1.Form1.gerarXLS() na c:\Users\fduval\Documents\GitHub\CorridasOrganizator\WindowsFormsApplication1\WindowsFormsApplication1\Form1.cs:linha 701
-Erro na escrita da corrida Corrida Noturna Halloween Run Brasil - Rio - linha 51 : O índ
+StackTra

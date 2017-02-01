@@ -275,7 +275,7 @@ namespace WindowsFormsApplication1
                     if (tr.Attributes.Contains("class") && tr.Attributes["class"].Value == "hover-link-calendar")
                     {
                         String nome = tr.SelectSingleNode("td[2]").InnerText;
-                        if (!nome.Contains("Kit")){
+                        if (!nome.ToLower().Contains("kit")){
                             String aux = tr.SelectSingleNode("td[3]").InnerText;
                             String estado = "";
                             for (int i = 0; i < estados.Length;i++)
@@ -475,7 +475,7 @@ namespace WindowsFormsApplication1
                     String nome = tipos3[i + 2].InnerText;
                     bool jaTem = false;
                     foreach(String key in corridas.Keys)
-                        if (key.Contains(nome)){
+                        if (key.ToLower().Contains(nome.ToLower())){//verificando se essa corrida já foi inserida
                             jaTem = true;
                             break;
                         }
